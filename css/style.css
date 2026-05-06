@@ -11,13 +11,12 @@
 }
 .loading-logo {
   width: 140px; height: 140px; object-fit: contain;
-  animation: pulse-spin 1.8s ease-in-out infinite;
+  animation: pulse-glow 2s ease-in-out infinite;
   filter: drop-shadow(0 4px 20px rgba(255,255,255,.25));
 }
-@keyframes pulse-spin {
-  0%   { transform: scale(1) rotate(0deg); opacity: .85; }
-  50%  { transform: scale(1.1) rotate(180deg); opacity: 1; }
-  100% { transform: scale(1) rotate(360deg); opacity: .85; }
+@keyframes pulse-glow {
+  0%, 100% { filter: drop-shadow(0 4px 20px rgba(255,255,255,.2)); opacity: .85; }
+  50%  { filter: drop-shadow(0 4px 35px rgba(255,255,255,.5)); opacity: 1; }
 }
 .loading-text {
   color: rgba(255,255,255,.9); font-size: 1.1rem; font-weight: 600;
