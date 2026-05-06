@@ -1,26 +1,39 @@
 // ===== PMTS Certificate System – Shared Utilities =====
 
 /**
- * Encode certificate data as a URL-safe base64 string (UTF-8 safe).
+ * Encode certificate data as a base64 string (UTF-8 safe, no deprecated helpers).
+ * Uses TextEncoder when available, with a plain ASCII fallback.
  * @param {Object} data
  * @returns {string}
  */
 function encodeData(data) {
+  var json = JSON.stringify(data);
   try {
-    return btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+    var bytes  = new TextEncoder().encode(json);
+    var binary = '';
+    for (var i = 0; i < bytes.length; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
   } catch (e) {
-    return btoa(JSON.stringify(data));
+    return btoa(json);
   }
 }
 
 /**
  * Decode a base64 string back to a certificate data object.
+ * Uses TextDecoder when available, with a plain ASCII fallback.
  * @param {string} encoded
  * @returns {Object|null}
  */
 function decodeData(encoded) {
   try {
-    return JSON.parse(decodeURIComponent(escape(atob(encoded))));
+    var binary = atob(encoded);
+    var bytes  = new Uint8Array(binary.length);
+    for (var i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return JSON.parse(new TextDecoder().decode(bytes));
   } catch (e) {
     try {
       return JSON.parse(atob(encoded));

@@ -199,38 +199,89 @@ function renderCertificatesList() {
     return;
   }
 
-  var rows = certs.slice().reverse().map(function (cert) {
-    return '<tr>' +
-      '<td>' + esc(cert.participantName  || '—') + '</td>' +
-      '<td>' + esc(cert.passportId       || '—') + '</td>' +
-      '<td>' + esc(cert.registerCode     || '—') + '</td>' +
-      '<td>' + formatDate(cert.issueDate)         + '</td>' +
-      '<td>' + esc(cert.courseName       || '—') + '</td>' +
-      '<td>' +
-        '<div class="actions-cell">' +
-          '<button class="btn btn-primary btn-sm" onclick="showQRForCert(\'' + cert.id + '\')">🔳 QR</button>' +
-          '<button class="btn btn-secondary btn-sm" onclick="editCertificate(\'' + cert.id + '\')">✏️ Edit</button>' +
-          '<button class="btn btn-danger btn-sm" onclick="confirmDelete(\'' + cert.id + '\')">🗑</button>' +
-        '</div>' +
-      '</td>' +
-    '</tr>';
-  }).join('');
+  // Build table via DOM (not innerHTML) for the action buttons to avoid
+  // injecting cert.id into inline onclick attributes.
+  var wrapper = document.createElement('div');
+  wrapper.className = 'certs-table-wrapper';
 
-  container.innerHTML =
-    '<div class="certs-table-wrapper">' +
-      '<table class="certs-table">' +
-        '<thead><tr>' +
-          '<th>Participant Name</th>' +
-          '<th>Passport / ID</th>' +
-          '<th>Register Code</th>' +
-          '<th>Issue Date</th>' +
-          '<th>Course</th>' +
-          '<th>Actions</th>' +
-        '</tr></thead>' +
-        '<tbody>' + rows + '</tbody>' +
-      '</table>' +
-    '</div>';
+  var table = document.createElement('table');
+  table.className = 'certs-table';
+  table.innerHTML =
+    '<thead><tr>' +
+      '<th>Participant Name</th>' +
+      '<th>Passport / ID</th>' +
+      '<th>Register Code</th>' +
+      '<th>Issue Date</th>' +
+      '<th>Course</th>' +
+      '<th>Actions</th>' +
+    '</tr></thead>';
+
+  var tbody = document.createElement('tbody');
+
+  certs.slice().reverse().forEach(function (cert) {
+    var tr = document.createElement('tr');
+
+    // Text cells – set via textContent so no HTML injection is possible.
+    var cells = [
+      cert.participantName || '—',
+      cert.passportId      || '—',
+      cert.registerCode    || '—',
+      formatDate(cert.issueDate),
+      cert.courseName      || '—'
+    ];
+    cells.forEach(function (text) {
+      var td = document.createElement('td');
+      td.textContent = text;
+      tr.appendChild(td);
+    });
+
+    // Action buttons – use data-id attribute; click handled by event delegation.
+    var tdActions  = document.createElement('td');
+    var actionsDiv = document.createElement('div');
+    actionsDiv.className = 'actions-cell';
+
+    var btnQr = document.createElement('button');
+    btnQr.className = 'btn btn-primary btn-sm';
+    btnQr.textContent = '🔳 QR';
+    btnQr.dataset.action = 'qr';
+    btnQr.dataset.id     = cert.id;
+
+    var btnEdit = document.createElement('button');
+    btnEdit.className = 'btn btn-secondary btn-sm';
+    btnEdit.textContent = '✏️ Edit';
+    btnEdit.dataset.action = 'edit';
+    btnEdit.dataset.id     = cert.id;
+
+    var btnDel = document.createElement('button');
+    btnDel.className = 'btn btn-danger btn-sm';
+    btnDel.textContent = '🗑';
+    btnDel.dataset.action = 'delete';
+    btnDel.dataset.id     = cert.id;
+
+    actionsDiv.appendChild(btnQr);
+    actionsDiv.appendChild(btnEdit);
+    actionsDiv.appendChild(btnDel);
+    tdActions.appendChild(actionsDiv);
+    tr.appendChild(tdActions);
+    tbody.appendChild(tr);
+  });
+
+  table.appendChild(tbody);
+  wrapper.appendChild(table);
+  container.innerHTML = '';
+  container.appendChild(wrapper);
 }
+
+// Event delegation for table action buttons
+document.addEventListener('click', function (e) {
+  var btn = e.target.closest('button[data-action]');
+  if (!btn) return;
+  var action = btn.dataset.action;
+  var id     = btn.dataset.id;
+  if (action === 'qr')     showQRForCert(id);
+  if (action === 'edit')   editCertificate(id);
+  if (action === 'delete') confirmDelete(id);
+});
 
 function esc(str) {
   var d = document.createElement('div');
