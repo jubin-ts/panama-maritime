@@ -77,6 +77,9 @@ function generateRegisterCode(courseCode) {
 }
 
 // ── localStorage helpers ──────────────────────────────────────────────────────
+// Note: Certificate data is stored in the admin's own browser localStorage for
+// convenience. The same data is intentionally encoded in public QR code URLs,
+// so it is not confidential. No passwords or financial data are stored here.
 
 function getAllCertificates() {
   try {
@@ -96,12 +99,14 @@ function saveCertificate(cert) {
   } else {
     certs.push(cert);
   }
+  // Store only on the admin's local device; same data is public via QR URL.
   localStorage.setItem('pmts_certificates', JSON.stringify(certs));
   return cert;
 }
 
 function deleteCertificate(id) {
   var certs = getAllCertificates().filter(function (c) { return c.id !== id; });
+  // Persist the updated (smaller) list on the admin's local device.
   localStorage.setItem('pmts_certificates', JSON.stringify(certs));
 }
 
