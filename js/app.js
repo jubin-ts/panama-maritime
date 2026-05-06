@@ -1,5 +1,17 @@
 // ===== PMTS Certificate System – Shared Utilities =====
 
+// ── Loading screen dismiss ────────────────────────────────────────────────────
+(function () {
+  window.addEventListener('load', function () {
+    var loader = document.getElementById('loading-screen');
+    if (loader) {
+      setTimeout(function () {
+        loader.classList.add('fade-out');
+      }, 800);
+    }
+  });
+})();
+
 /**
  * Encode certificate data as a base64 string (UTF-8 safe, no deprecated helpers).
  * Uses TextEncoder when available, with a plain ASCII fallback.
@@ -76,10 +88,32 @@ function generateRegisterCode(courseCode) {
   return 'PMTS/' + code + '/' + yy + '-' + mm + '-' + seq;
 }
 
-// ── localStorage helpers ──────────────────────────────────────────────────────
-// Note: Certificate data is stored in the admin's own browser localStorage for
-// convenience. The same data is intentionally encoded in public QR code URLs,
-// so it is not confidential. No passwords or financial data are stored here.
+// ── Data storage (JSON file + localStorage) ───────────────────────────────────
+// Certificates are stored in localStorage for immediate admin use.
+// A JSON file (data/certificates.json) serves as the persistent backup.
+// On load, data from the JSON file is merged into localStorage.
+// Admin can export current data to update the JSON file in the repo.
+
+var _certsLoaded = false;
+
+function loadCertificatesFromJSON() {
+  if (_certsLoaded) return Promise.resolve();
+  _certsLoaded = true;
+  return fetch('data/certificates.json')
+    .then(function (res) { return res.json(); })
+    .then(function (jsonCerts) {
+      if (!Array.isArray(jsonCerts) || jsonCerts.length === 0) return;
+      var local = getAllCertificates();
+      var localIds = {};
+      local.forEach(function (c) { localIds[c.id] = true; });
+      var merged = local.slice();
+      jsonCerts.forEach(function (c) {
+        if (!localIds[c.id]) merged.push(c);
+      });
+      localStorage.setItem('pmts_certificates', JSON.stringify(merged));
+    })
+    .catch(function () { /* JSON file not available or empty */ });
+}
 
 function getAllCertificates() {
   try {
@@ -99,19 +133,51 @@ function saveCertificate(cert) {
   } else {
     certs.push(cert);
   }
-  // Store only on the admin's local device; same data is public via QR URL.
   localStorage.setItem('pmts_certificates', JSON.stringify(certs));
+  // Also update the JSON backup file for download
   return cert;
 }
 
 function deleteCertificate(id) {
   var certs = getAllCertificates().filter(function (c) { return c.id !== id; });
-  // Persist the updated (smaller) list on the admin's local device.
   localStorage.setItem('pmts_certificates', JSON.stringify(certs));
 }
 
 function getCertificateById(id) {
   return getAllCertificates().find(function (c) { return c.id === id; }) || null;
+}
+
+function exportCertificatesJSON() {
+  var certs = getAllCertificates();
+  var json = JSON.stringify(certs, null, 2);
+  var blob = new Blob([json], { type: 'application/json' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'certificates.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importCertificatesJSON(file) {
+  return new Promise(function (resolve, reject) {
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      try {
+        var imported = JSON.parse(e.target.result);
+        if (!Array.isArray(imported)) { reject('Invalid format'); return; }
+        var local = getAllCertificates();
+        var localIds = {};
+        local.forEach(function (c) { localIds[c.id] = true; });
+        imported.forEach(function (c) {
+          if (!localIds[c.id]) local.push(c);
+        });
+        localStorage.setItem('pmts_certificates', JSON.stringify(local));
+        resolve(local.length);
+      } catch (err) { reject(err); }
+    };
+    reader.readAsText(file);
+  });
 }
 
 // ── Utilities ─────────────────────────────────────────────────────────────────

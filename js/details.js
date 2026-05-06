@@ -6,13 +6,15 @@ document.addEventListener('DOMContentLoaded', function () {
   var hash      = window.location.hash.slice(1);
 
   if (!hash) {
-    renderNotFound(container, 'No certificate data was provided in the URL.');
+    // No certificate data — redirect to home page
+    window.location.href = 'index.html';
     return;
   }
 
   var data = decodeData(hash);
   if (!data) {
-    renderNotFound(container, 'The certificate data could not be read. Please scan the QR code again.');
+    // Invalid data — redirect to home page
+    window.location.href = 'index.html';
     return;
   }
 
@@ -48,7 +50,7 @@ function renderCertificate(container, d) {
     '<div class="cert-card">' +
       /* Watermark inside the card */
       '<div class="cert-card-watermark">' +
-        '<img src="WhatsApp%20Image%202026-05-06%20at%2012.45.56.jpeg" alt="">' +
+        '<img src="logo.png" alt="">' +
       '</div>' +
       /* Header */
       '<div class="cert-card-header">' +

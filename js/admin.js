@@ -7,7 +7,10 @@ document.addEventListener('DOMContentLoaded', function () {
   var today = new Date().toISOString().split('T')[0];
   document.getElementById('issue-date').value = today;
 
-  renderCertificatesList();
+  // Load certificates from JSON file, then render
+  loadCertificatesFromJSON().then(function () {
+    renderCertificatesList();
+  });
   bindEvents();
 });
 
@@ -23,6 +26,18 @@ function bindEvents() {
   document.getElementById('btn-close-modal').addEventListener('click', closeModal);
   document.getElementById('qr-modal').addEventListener('click', function (e) {
     if (e.target === this) closeModal();
+  });
+  document.getElementById('btn-export').addEventListener('click', exportCertificatesJSON);
+  document.getElementById('btn-import').addEventListener('change', function (e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    importCertificatesJSON(file).then(function (count) {
+      renderCertificatesList();
+      showNotification('Imported successfully! Total: ' + count + ' certificates.', 'success');
+    }).catch(function () {
+      showNotification('Failed to import. Check the file format.', 'error');
+    });
+    e.target.value = '';
   });
 }
 
