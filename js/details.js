@@ -54,7 +54,7 @@ function renderCertificate(container, d) {
       '</div>' +
       /* Header */
       '<div class="cert-card-header">' +
-        '<div class="cert-title">PMTS Authentic Certificate</div>' +
+        '<div class="cert-title">PMTS Authentic Certificate <span style="color:#28a745;">&#10004;</span></div>' +
       '</div>' +
       /* Status row */
       // '<div class="cert-status-row">' +
