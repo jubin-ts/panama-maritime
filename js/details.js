@@ -57,10 +57,10 @@ function renderCertificate(container, d) {
         '<div class="cert-title">PMTS Authentic Certificate</div>' +
       '</div>' +
       /* Status row */
-      '<div class="cert-status-row">' +
-        '<span class="cert-status-icon">&#10004;</span>' +
-        '<span class="cert-status-text">Authentic Certificate</span>' +
-      '</div>' +
+      // '<div class="cert-status-row">' +
+      //   '<span class="cert-status-icon">&#10004;</span>' +
+      //   '<span class="cert-status-text">Authentic Certificate</span>' +
+      // '</div>' +
       /* Fields */
       '<div class="cert-fields">' + fieldRows + '</div>' +
     '</div>';
