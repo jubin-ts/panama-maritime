@@ -21,29 +21,38 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 /**
- * Fetch certificates from GitHub raw content (always fresh, no CDN cache).
- * Merges with any local data to avoid data loss.
- * Falls back to the local data/certificates.json if GitHub is unreachable.
+ * Fetch certificates from GitHub raw content (always fresh, no CDN cache)
+ * AND the locally served JSON file. Merges all sources with localStorage
+ * so no data is ever lost regardless of sync state.
  */
 function loadCertificatesFromRemote() {
   var rawUrl = 'https://raw.githubusercontent.com/jubin-ts/panama-maritime/main/data/certificates.json?t=' + Date.now();
-  return fetch(rawUrl)
+  var localUrl = 'data/certificates.json?t=' + Date.now();
+
+  var fetchRemote = fetch(rawUrl)
     .then(function (res) { return res.json(); })
-    .then(function (remoteCerts) {
-      if (Array.isArray(remoteCerts) && remoteCerts.length > 0) {
-        // Merge remote with local (keep union of both)
-        var local = getAllCertificates();
-        var idMap = {};
-        remoteCerts.forEach(function (c) { idMap[c.id] = c; });
-        local.forEach(function (c) { if (!idMap[c.id]) idMap[c.id] = c; });
-        var merged = Object.keys(idMap).map(function (k) { return idMap[k]; });
-        localStorage.setItem('pmts_certificates', JSON.stringify(merged));
-      }
-    })
-    .catch(function () {
-      // Fallback to local JSON file
-      return loadCertificatesFromJSON();
-    });
+    .catch(function () { return []; });
+
+  var fetchLocal = fetch(localUrl)
+    .then(function (res) { return res.json(); })
+    .catch(function () { return []; });
+
+  return Promise.all([fetchRemote, fetchLocal]).then(function (results) {
+    var remoteCerts = Array.isArray(results[0]) ? results[0] : [];
+    var localFileCerts = Array.isArray(results[1]) ? results[1] : [];
+    var storedCerts = getAllCertificates();
+
+    // Merge all sources by id (union) — no data is lost
+    var idMap = {};
+    remoteCerts.forEach(function (c) { if (c && c.id) idMap[c.id] = c; });
+    localFileCerts.forEach(function (c) { if (c && c.id && !idMap[c.id]) idMap[c.id] = c; });
+    storedCerts.forEach(function (c) { if (c && c.id && !idMap[c.id]) idMap[c.id] = c; });
+
+    var merged = Object.keys(idMap).map(function (k) { return idMap[k]; });
+    if (merged.length > 0) {
+      localStorage.setItem('pmts_certificates', JSON.stringify(merged));
+    }
+  });
 }
 
 function performSearch(query) {
@@ -57,7 +66,9 @@ function performSearch(query) {
     return passport === normalizedQuery ||
            regCode === normalizedQuery ||
            passport.indexOf(normalizedQuery) !== -1 ||
-           regCode.indexOf(normalizedQuery) !== -1;
+           regCode.indexOf(normalizedQuery) !== -1 ||
+           normalizedQuery.indexOf(passport) !== -1 && passport.length > 0 ||
+           normalizedQuery.indexOf(regCode) !== -1 && regCode.length > 0;
   });
 
   if (matches.length === 0) {
