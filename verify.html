@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify Certificate – PMTS</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Loading Splash Screen -->
+  <div id="loading-screen" class="loading-screen">
+    <img src="logo.png" alt="PMTS" class="loading-logo">
+    <p class="loading-text">Panama Maritime Training Services</p>
+  </div>
+
+  <!-- Fixed low-opacity background -->
+  <div class="bg-wrapper">
+    <img src="background.jpeg" alt="">
+  </div>
+
+  <div class="page-wrapper">
+
+    <!-- Header -->
+    <header class="site-header">
+      <div class="header-inner">
+        <a href="index.html" class="header-brand">
+          <img src="logo.png" alt="PMTS Logo" class="header-logo">
+          <div class="header-titles">
+            <h1>Panama Maritime Training Services</h1>
+            <p>Official Certificate Verification System</p>
+          </div>
+        </a>
+        <nav class="site-nav">
+          <a href="index.html" class="nav-link">Home</a>
+          <a href="verify.html" class="nav-link active"> Certificate Verification</a>
+          <a href="admin.html" class="nav-link">Admin</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="verify-section">
+        <div class="container">
+          <div class="verify-box">
+            <div class="verify-box-header">
+              <img src="logo.png" alt="PMTS" class="verify-box-logo">
+              <h2>Certificate Verification</h2>
+              <p class="sub">Enter Passport Number /Certificate Number to verify and view certificate details.</p>
+            </div>
+
+            <form id="verify-form" class="verify-form" autocomplete="off">
+              <div class="form-group">
+                <label for="verify-input">Passport Number / Certificate Number</label>
+                <input type="text" id="verify-input" placeholder="e.g. AB1234567 or PMTS/WER/25-06-12345" required>
+              </div>
+              <button type="submit" class="btn btn-primary btn-block"> Verify Certificate</button>
+            </form>
+
+            <!-- Result area -->
+            <div id="verify-result"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>&copy; 2026 Panama Maritime Training Services. All rights reserved.</p>
+    </footer>
+
+  </div><!-- /.page-wrapper -->
+
+  <script src="js/app.js"></script>
+  <script src="js/verify.js"></script>
+</body>
+</html>

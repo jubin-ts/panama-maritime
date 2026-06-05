@@ -363,3 +363,105 @@ label { font-size: .85rem; font-weight: 600; color: var(--text-mid); letter-spac
 .login-card h2 { color: var(--navy); margin-bottom: 6px; }
 .login-card > p { color: var(--text-mid); font-size: .9rem; margin-bottom: 24px; }
 .login-card .form-group { text-align: left; margin-bottom: 14px; }
+
+/* ===== Verify Page ===== */
+.verify-section {
+  padding: 60px 0 40px;
+}
+.verify-box {
+  max-width: 600px;
+  margin: 0 auto;
+  background: var(--white);
+  border-radius: 20px;
+  padding: 40px 36px;
+  box-shadow: 0 8px 32px var(--shadow);
+  border: 1px solid var(--border);
+}
+.verify-box-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+.verify-box-logo {
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
+  margin-bottom: 12px;
+}
+.verify-box-header h2 {
+  color: var(--navy);
+  margin-bottom: 6px;
+}
+.verify-box-header .sub {
+  color: var(--text-mid);
+  font-size: .92rem;
+}
+.verify-form .form-group {
+  margin-bottom: 18px;
+}
+.verify-form label {
+  display: block;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 6px;
+  font-size: .9rem;
+}
+.verify-form input[type="text"] {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: border-color .2s;
+}
+.verify-form input[type="text"]:focus {
+  outline: none;
+  border-color: var(--mid-blue);
+  box-shadow: 0 0 0 3px rgba(74,144,217,.15);
+}
+.btn-block {
+  display: block;
+  width: 100%;
+}
+.btn-sm {
+  padding: 8px 18px;
+  font-size: .88rem;
+}
+
+/* Verify result cards */
+#verify-result {
+  margin-top: 28px;
+}
+.verify-result-card {
+  margin-bottom: 20px;
+}
+.verify-card-actions {
+  text-align: center;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.verify-not-found {
+  text-align: center;
+  padding: 30px 20px;
+  background: #fff8f0;
+  border: 1px solid #f5c6a0;
+  border-radius: 12px;
+  margin-top: 10px;
+}
+.verify-not-found .icon {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+.verify-not-found h3 {
+  color: var(--navy);
+  margin-bottom: 8px;
+}
+.verify-not-found p {
+  color: var(--text-mid);
+  font-size: .92rem;
+}
+.verify-not-found .hint {
+  margin-top: 10px;
+  font-size: .85rem;
+  color: var(--text-light);
+}
