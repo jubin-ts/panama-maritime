@@ -1,8 +1,8 @@
 // ===== Certificate Verification Page =====
 
 document.addEventListener('DOMContentLoaded', function () {
-  // Load certificates from JSON file into localStorage
-  loadCertificatesFromJSON().then(function () {
+  // Load certificates from GitHub raw URL (bypasses Pages cache) and local JSON
+  loadCertificatesFromRemote().then(function () {
     // Check if there's a query in the URL hash
     var hash = window.location.hash.slice(1);
     if (hash) {
@@ -20,6 +20,25 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 });
 
+/**
+ * Fetch certificates from GitHub raw content (always fresh, no CDN cache).
+ * Falls back to the local data/certificates.json if GitHub is unreachable.
+ */
+function loadCertificatesFromRemote() {
+  var rawUrl = 'https://raw.githubusercontent.com/jubin-ts/panama-maritime/main/data/certificates.json?t=' + Date.now();
+  return fetch(rawUrl)
+    .then(function (res) { return res.json(); })
+    .then(function (certs) {
+      if (Array.isArray(certs) && certs.length > 0) {
+        localStorage.setItem('pmts_certificates', JSON.stringify(certs));
+      }
+    })
+    .catch(function () {
+      // Fallback to local JSON file
+      return loadCertificatesFromJSON();
+    });
+}
+
 function performSearch(query) {
   var resultContainer = document.getElementById('verify-result');
   var certs = getAllCertificates();
@@ -28,7 +47,10 @@ function performSearch(query) {
   var matches = certs.filter(function (c) {
     var passport = (c.passportId || '').toLowerCase().replace(/\s+/g, '');
     var regCode  = (c.registerCode || '').toLowerCase().replace(/\s+/g, '');
-    return passport === normalizedQuery || regCode === normalizedQuery;
+    return passport === normalizedQuery ||
+           regCode === normalizedQuery ||
+           passport.indexOf(normalizedQuery) !== -1 ||
+           regCode.indexOf(normalizedQuery) !== -1;
   });
 
   if (matches.length === 0) {

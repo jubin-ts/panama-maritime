@@ -134,13 +134,14 @@ function saveCertificate(cert) {
     certs.push(cert);
   }
   localStorage.setItem('pmts_certificates', JSON.stringify(certs));
-  // Also update the JSON backup file for download
+  syncToGitHub();
   return cert;
 }
 
 function deleteCertificate(id) {
   var certs = getAllCertificates().filter(function (c) { return c.id !== id; });
   localStorage.setItem('pmts_certificates', JSON.stringify(certs));
+  syncToGitHub();
 }
 
 function getCertificateById(id) {
@@ -209,4 +210,60 @@ function showNotification(message, type) {
   el.textContent = message;
   el.style.display = 'flex';
   setTimeout(function () { el.style.display = 'none'; }, 4000);
+}
+
+// ── GitHub Sync ───────────────────────────────────────────────────────────────
+// Pushes current certificates to data/certificates.json in the GitHub repo
+// so the verify page (and any visitor) can access them on the live site.
+
+var GITHUB_REPO = 'jubin-ts/panama-maritime';
+var GITHUB_FILE_PATH = 'data/certificates.json';
+
+function getGitHubToken() {
+  return localStorage.getItem('pmts_github_token') || '';
+}
+
+function setGitHubToken(token) {
+  localStorage.setItem('pmts_github_token', token);
+}
+
+function syncToGitHub() {
+  var token = getGitHubToken();
+  if (!token) return;
+
+  var certs = getAllCertificates();
+  var content = btoa(unescape(encodeURIComponent(JSON.stringify(certs, null, 2))));
+  var apiUrl = 'https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + GITHUB_FILE_PATH;
+
+  // First get the current file SHA (required for updates)
+  fetch(apiUrl, {
+    headers: { 'Authorization': 'token ' + token }
+  })
+  .then(function (res) { return res.json(); })
+  .then(function (data) {
+    var sha = data.sha || undefined;
+    var body = {
+      message: 'Update certificates data',
+      content: content,
+      branch: 'main'
+    };
+    if (sha) body.sha = sha;
+
+    return fetch(apiUrl, {
+      method: 'PUT',
+      headers: {
+        'Authorization': 'token ' + token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+  })
+  .then(function (res) {
+    if (!res.ok) {
+      console.warn('GitHub sync failed:', res.status);
+    }
+  })
+  .catch(function (err) {
+    console.warn('GitHub sync error:', err);
+  });
 }

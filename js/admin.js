@@ -298,6 +298,45 @@ document.addEventListener('click', function (e) {
   if (action === 'delete') confirmDelete(id);
 });
 
+// ── GitHub Sync UI ────────────────────────────────────────────────────────────
+
+(function () {
+  var setupBtn  = document.getElementById('btn-setup-token');
+  var statusEl  = document.getElementById('sync-status');
+  if (!setupBtn) return;
+
+  updateSyncStatus();
+
+  setupBtn.addEventListener('click', function () {
+    var current = getGitHubToken();
+    var token = prompt(
+      'Enter your GitHub Personal Access Token (with repo content write access).\n\n' +
+      'This is stored only in your browser and used to sync certificates to the repository.\n\n' +
+      'Current: ' + (current ? '••••' + current.slice(-4) : 'Not set'),
+      current || ''
+    );
+    if (token !== null) {
+      setGitHubToken(token.trim());
+      updateSyncStatus();
+      if (token.trim()) {
+        syncToGitHub();
+        showNotification('GitHub token saved. Certificates will now sync automatically.', 'success');
+      } else {
+        showNotification('GitHub token removed. Auto-sync disabled.', 'error');
+      }
+    }
+  });
+
+  function updateSyncStatus() {
+    var token = getGitHubToken();
+    if (token) {
+      statusEl.innerHTML = '<span style="color:var(--success);">● Sync active</span>';
+    } else {
+      statusEl.innerHTML = '<span style="color:var(--text-light);">○ Sync not configured</span>';
+    }
+  }
+})();
+
 function esc(str) {
   var d = document.createElement('div');
   d.textContent = str;

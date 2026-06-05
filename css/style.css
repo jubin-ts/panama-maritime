@@ -465,3 +465,15 @@ label { font-size: .85rem; font-weight: 600; color: var(--text-mid); letter-spac
   font-size: .85rem;
   color: var(--text-light);
 }
+
+/* ===== GitHub Sync Bar ===== */
+.github-sync-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  margin-top: 12px;
+  background: var(--pale-blue);
+  border-radius: 8px;
+  font-size: .85rem;
+}
