@@ -22,15 +22,22 @@ document.addEventListener('DOMContentLoaded', function () {
 
 /**
  * Fetch certificates from GitHub raw content (always fresh, no CDN cache).
+ * Merges with any local data to avoid data loss.
  * Falls back to the local data/certificates.json if GitHub is unreachable.
  */
 function loadCertificatesFromRemote() {
   var rawUrl = 'https://raw.githubusercontent.com/jubin-ts/panama-maritime/main/data/certificates.json?t=' + Date.now();
   return fetch(rawUrl)
     .then(function (res) { return res.json(); })
-    .then(function (certs) {
-      if (Array.isArray(certs) && certs.length > 0) {
-        localStorage.setItem('pmts_certificates', JSON.stringify(certs));
+    .then(function (remoteCerts) {
+      if (Array.isArray(remoteCerts) && remoteCerts.length > 0) {
+        // Merge remote with local (keep union of both)
+        var local = getAllCertificates();
+        var idMap = {};
+        remoteCerts.forEach(function (c) { idMap[c.id] = c; });
+        local.forEach(function (c) { if (!idMap[c.id]) idMap[c.id] = c; });
+        var merged = Object.keys(idMap).map(function (k) { return idMap[k]; });
+        localStorage.setItem('pmts_certificates', JSON.stringify(merged));
       }
     })
     .catch(function () {

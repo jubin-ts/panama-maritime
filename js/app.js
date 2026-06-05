@@ -227,16 +227,21 @@ function setGitHubToken(token) {
   localStorage.setItem('pmts_github_token', token);
 }
 
+var _syncRetryCount = 0;
+var _syncPending = false;
+
 function syncToGitHub() {
   var token = getGitHubToken();
-  if (!token) return;
+  if (!token) return Promise.resolve();
+  if (_syncPending) return Promise.resolve();
+  _syncPending = true;
 
   var certs = getAllCertificates();
   var content = btoa(unescape(encodeURIComponent(JSON.stringify(certs, null, 2))));
   var apiUrl = 'https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + GITHUB_FILE_PATH;
 
   // First get the current file SHA (required for updates)
-  fetch(apiUrl, {
+  return fetch(apiUrl, {
     headers: { 'Authorization': 'token ' + token }
   })
   .then(function (res) { return res.json(); })
@@ -259,11 +264,47 @@ function syncToGitHub() {
     });
   })
   .then(function (res) {
-    if (!res.ok) {
-      console.warn('GitHub sync failed:', res.status);
+    _syncPending = false;
+    if (res.ok) {
+      _syncRetryCount = 0;
+      showNotification('✓ Certificates synced to cloud.', 'success');
+    } else {
+      handleSyncFailure('Sync failed (HTTP ' + res.status + ')');
     }
   })
   .catch(function (err) {
-    console.warn('GitHub sync error:', err);
+    _syncPending = false;
+    handleSyncFailure('Sync error: ' + err.message);
   });
+}
+
+function handleSyncFailure(reason) {
+  _syncRetryCount++;
+  console.warn('GitHub sync attempt ' + _syncRetryCount + ':', reason);
+  if (_syncRetryCount <= 3) {
+    // Auto-retry after a delay
+    setTimeout(function () { syncToGitHub(); }, 3000 * _syncRetryCount);
+    showNotification('⚠ Sync failed, retrying... (attempt ' + _syncRetryCount + '/3)', 'error');
+  } else {
+    _syncRetryCount = 0;
+    showNotification('❌ Sync failed after 3 attempts. Data is saved locally. Please check your token or internet.', 'error');
+  }
+}
+
+/**
+ * Merge remote certificates with local ones (union by id). Prevents data loss
+ * if either side has certificates the other doesn't.
+ */
+function mergeCertificates(remoteCerts) {
+  var local = getAllCertificates();
+  var idMap = {};
+  // Local data takes priority (admin may have unsaved edits)
+  local.forEach(function (c) { idMap[c.id] = c; });
+  // Add remote-only certificates
+  remoteCerts.forEach(function (c) {
+    if (!idMap[c.id]) idMap[c.id] = c;
+  });
+  var merged = Object.keys(idMap).map(function (k) { return idMap[k]; });
+  localStorage.setItem('pmts_certificates', JSON.stringify(merged));
+  return merged;
 }

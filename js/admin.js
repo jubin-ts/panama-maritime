@@ -7,12 +7,32 @@ document.addEventListener('DOMContentLoaded', function () {
   var today = new Date().toISOString().split('T')[0];
   document.getElementById('issue-date').value = today;
 
-  // Load certificates from JSON file, then render
+  // Load certificates from JSON file and remote, then render
   loadCertificatesFromJSON().then(function () {
+    return loadRemoteAndMerge();
+  }).then(function () {
     renderCertificatesList();
   });
   bindEvents();
 });
+
+/**
+ * Fetch from GitHub raw URL and merge with local data on admin load.
+ * Ensures admin always sees ALL certificates even if localStorage was cleared.
+ */
+function loadRemoteAndMerge() {
+  var token = getGitHubToken();
+  if (!token) return Promise.resolve();
+  var rawUrl = 'https://raw.githubusercontent.com/jubin-ts/panama-maritime/main/data/certificates.json?t=' + Date.now();
+  return fetch(rawUrl)
+    .then(function (res) { return res.json(); })
+    .then(function (remoteCerts) {
+      if (Array.isArray(remoteCerts) && remoteCerts.length > 0) {
+        mergeCertificates(remoteCerts);
+      }
+    })
+    .catch(function () { /* offline — use local only */ });
+}
 
 function bindEvents() {
   document.getElementById('cert-form').addEventListener('submit', handleFormSubmit);
