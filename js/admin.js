@@ -322,10 +322,22 @@ document.addEventListener('click', function (e) {
 
 (function () {
   var setupBtn  = document.getElementById('btn-setup-token');
+  var syncBtn   = document.getElementById('btn-sync-now');
   var statusEl  = document.getElementById('sync-status');
   if (!setupBtn) return;
 
   updateSyncStatus();
+
+  syncBtn.addEventListener('click', function () {
+    var token = getGitHubToken();
+    if (!token) {
+      showNotification('Set up your GitHub token first.', 'error');
+      return;
+    }
+    var certs = getAllCertificates();
+    showNotification('Syncing ' + certs.length + ' certificate(s) to cloud...', 'success');
+    syncToGitHub();
+  });
 
   setupBtn.addEventListener('click', function () {
     var current = getGitHubToken();
